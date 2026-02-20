@@ -1,0 +1,16 @@
+{
+  "name": "My changelog",
+  "id": "1606748616592584149",
+  "api": "1.0.0",
+  "main": "code.js",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "documentAccess": "dynamic-page",
+  "editorType": ["figma"],
+  "ui": "ui.html",
+  "networkAccess": {
+    "allowedDomains": ["*"],
+    "reasoning": "Para cargar el avatar del usuario en el changelog"
+  },
+  "permissions": ["currentuser"]
+}

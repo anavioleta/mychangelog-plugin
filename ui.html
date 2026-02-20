@@ -1,0 +1,197 @@
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 12px;
+    margin: 0;
+    padding: 16px;
+    color: #333;
+  }
+  h2 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .subtitle {
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 14px;
+  }
+  label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+    color: #555;
+  }
+  select, textarea {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+  }
+  textarea {
+    min-height: 80px;
+    resize: vertical;
+  }
+  select:focus, textarea:focus {
+    outline: none;
+    border-color: #0d99ff;
+  }
+  .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .btn-group button {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 11px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-group button:hover {
+    border-color: #0d99ff;
+    background: #f5f9ff;
+  }
+  .btn-group button.selected {
+    background: #0d99ff;
+    border-color: #0d99ff;
+    color: white;
+  }
+  .buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  button#add {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    background: #0d99ff;
+    color: white;
+    cursor: pointer;
+  }
+  button#add:hover { background: #0b85e0; }
+  button#cancel {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    background: #f0f0f0;
+    color: #333;
+    cursor: pointer;
+  }
+  button#cancel:hover { background: #e0e0e0; }
+  .checkbox-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .checkbox-wrap input { margin: 0; }
+</style>
+
+<h2>Documentar cambios</h2>
+<p class="subtitle">Elige la pagina, el tipo de version y describe que cambiaste.</p>
+
+<label>Pagina donde anadir el changelog</label>
+<select id="pageSelect"></select>
+
+<label>Tipo de version</label>
+<div class="btn-group" id="versionType">
+  <button type="button" data-version="patch">Patch v0.1.1</button>
+  <button type="button" data-version="minor">Minor v0.2.0</button>
+  <button type="button" data-version="major">Major v1.0.0</button>
+</div>
+
+<label>Tipo de comentario</label>
+<div class="btn-group" id="commentType">
+  <button type="button" data-type="added" class="selected">Anadido</button>
+  <button type="button" data-type="deleted">Borrado</button>
+  <button type="button" data-type="changed">Cambio</button>
+  <button type="button" data-type="fixed">Fixed</button>
+</div>
+
+<label for="change">Cambios realizados</label>
+<textarea id="change" placeholder="Ej: Actualice el boton primario, corregi espaciados en el header..."></textarea>
+
+<div class="buttons">
+  <button id="add">Anadir al changelog</button>
+  <div class="checkbox-wrap">
+    <input type="checkbox" id="saveVersion" checked>
+    <label for="saveVersion" style="margin:0;font-weight:400">Subir al historial de versiones</label>
+  </div>
+</div>
+
+<button id="cancel">Cerrar</button>
+
+<script>
+  var pageSelect = document.getElementById('pageSelect');
+  var versionTypeEl = document.getElementById('versionType');
+  var commentTypeEl = document.getElementById('commentType');
+  var textarea = document.getElementById('change');
+  var saveVersionCheck = document.getElementById('saveVersion');
+
+  var selectedVersion = 'patch';
+  var selectedComment = 'added';
+
+  versionTypeEl.onclick = function (e) {
+    var btn = e.target.closest('button[data-version]');
+    if (!btn) return;
+    versionTypeEl.querySelectorAll('button').forEach(function (b) { b.classList.remove('selected'); });
+    btn.classList.add('selected');
+    selectedVersion = btn.dataset.version;
+  };
+
+  commentTypeEl.onclick = function (e) {
+    var btn = e.target.closest('button[data-type]');
+    if (!btn) return;
+    commentTypeEl.querySelectorAll('button').forEach(function (b) { b.classList.remove('selected'); });
+    btn.classList.add('selected');
+    selectedComment = btn.dataset.type;
+  };
+
+  window.onmessage = function (event) {
+    var msg = event.data.pluginMessage;
+    if (!msg) return;
+    if (msg.type === 'init') {
+      pageSelect.innerHTML = '';
+      (msg.pages || []).forEach(function (p) {
+        var opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        if (p.isCurrent) opt.selected = true;
+        pageSelect.appendChild(opt);
+      });
+    }
+  };
+
+  document.getElementById('add').onclick = function () {
+    var text = textarea.value.trim();
+    if (!text) return;
+    parent.postMessage({
+      pluginMessage: {
+        type: 'add-entry',
+        pageId: pageSelect.value,
+        versionType: selectedVersion,
+        commentType: selectedComment,
+        text: text,
+        saveToVersionHistory: saveVersionCheck.checked
+      }
+    }, '*');
+    textarea.value = '';
+  };
+
+  document.getElementById('cancel').onclick = function () {
+    parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*');
+  };
+</script>
