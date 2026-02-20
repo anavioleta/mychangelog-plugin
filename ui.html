@@ -98,13 +98,83 @@
     gap: 6px;
   }
   .checkbox-wrap input { margin: 0; }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .mode-screen {
+    text-align: center;
+    padding: 8px 0;
+  }
+  .mode-screen h2 {
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+  }
+  .mode-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+  }
+  .mode-btn:hover {
+    border-color: #0d99ff;
+    background: #f5f9ff;
+  }
+  .mode-btn .icon {
+    font-size: 28px;
+    line-height: 1;
+  }
+  .btn-back {
+    margin-top: 12px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #666;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-back:hover { color: #0d99ff; }
 </style>
 
-<h2>Documentar cambios</h2>
-<p class="subtitle">Elige la pagina, el tipo de version y describe que cambiaste.</p>
+<div id="screenMode" class="screen active">
+  <div class="mode-screen">
+    <h2>¿Qué tipo de commit quieres hacer?</h2>
+    <div class="mode-options">
+      <button type="button" class="mode-btn" id="btnFileCommit">
+        <span class="icon" aria-hidden="true">&#128196;</span>
+        <span>File commit</span>
+      </button>
+      <button type="button" class="mode-btn" id="btnUxUiCommit">
+        <span class="icon" aria-hidden="true">&#128396;</span>
+        <span>UX/UI commit</span>
+      </button>
+    </div>
+  </div>
+</div>
 
-<label>Pagina donde anadir el changelog</label>
-<select id="pageSelect"></select>
+<div id="screenFileCommit" class="screen">
+  <button type="button" class="btn-back" id="backFromFile">← Volver</button>
+  <h2>Documentar cambios</h2>
+  <p class="subtitle">Elige la pagina, el tipo de version y describe que cambiaste.</p>
+
+  <label>Pagina donde anadir el changelog</label>
+  <select id="pageSelect"></select>
 
 <label>Tipo de version</label>
 <div class="btn-group" id="versionType">
@@ -115,10 +185,11 @@
 
 <label>Tipo de comentario</label>
 <div class="btn-group" id="commentType">
-  <button type="button" data-type="added" class="selected">Anadido</button>
-  <button type="button" data-type="deleted">Borrado</button>
-  <button type="button" data-type="changed">Cambio</button>
-  <button type="button" data-type="fixed">Fixed</button>
+  <button type="button" data-type="added">&#128640; Añadido</button>
+  <button type="button" data-type="deleted">&#128128; Borrado</button>
+  <button type="button" data-type="changed">&#128736; Cambio</button>
+  <button type="button" data-type="fixed">&#128138; Fixed</button>
+  <button type="button" data-type="custom">Custom</button>
 </div>
 
 <label for="change">Cambios realizados</label>
@@ -132,9 +203,63 @@
   </div>
 </div>
 
-<button id="cancel">Cerrar</button>
+  <button id="cancel">Cerrar</button>
+</div>
+
+<div id="screenUxUiCommit" class="screen">
+  <button type="button" class="btn-back" id="backFromUxUi">← Volver</button>
+  <h2>UX/UI commit</h2>
+  <p class="subtitle">Documenta cambios de diseño sin versionado ni historial de Figma. Elige una página existente o crea una nueva.</p>
+
+  <label>Página donde añadir el commit</label>
+  <select id="pageSelectUx">
+    <option value="new">— Crear página nueva —</option>
+  </select>
+
+  <label>Tipo de comentario</label>
+  <div class="btn-group" id="commentTypeUx">
+    <button type="button" data-type="added">&#128640; Añadido</button>
+    <button type="button" data-type="deleted">&#128128; Borrado</button>
+    <button type="button" data-type="changed">&#128736; Cambio</button>
+    <button type="button" data-type="fixed">&#128138; Fixed</button>
+    <button type="button" data-type="custom">Custom</button>
+  </div>
+
+  <label for="changeUx">Cambios realizados</label>
+  <textarea id="changeUx" placeholder="Ej: Actualicé el botón primario, corregí espaciados en el header..."></textarea>
+
+  <div class="buttons">
+    <button id="addUx">Añadir al changelog</button>
+  </div>
+
+  <button id="cancelUx">Cerrar</button>
+</div>
 
 <script>
+  var screenMode = document.getElementById('screenMode');
+  var screenFileCommit = document.getElementById('screenFileCommit');
+  var screenUxUiCommit = document.getElementById('screenUxUiCommit');
+
+  function showScreen(screen) {
+    screenMode.classList.remove('active');
+    screenFileCommit.classList.remove('active');
+    screenUxUiCommit.classList.remove('active');
+    if (screen) screen.classList.add('active');
+  }
+
+  document.getElementById('btnFileCommit').onclick = function () {
+    showScreen(screenFileCommit);
+  };
+  document.getElementById('btnUxUiCommit').onclick = function () {
+    showScreen(screenUxUiCommit);
+  };
+  document.getElementById('backFromFile').onclick = function () {
+    showScreen(screenMode);
+  };
+  document.getElementById('backFromUxUi').onclick = function () {
+    showScreen(screenMode);
+  };
+
   var pageSelect = document.getElementById('pageSelect');
   var versionTypeEl = document.getElementById('versionType');
   var commentTypeEl = document.getElementById('commentType');
@@ -142,7 +267,7 @@
   var saveVersionCheck = document.getElementById('saveVersion');
 
   var selectedVersion = 'patch';
-  var selectedComment = 'added';
+  var selectedComment = null;
 
   versionTypeEl.onclick = function (e) {
     var btn = e.target.closest('button[data-version]');
@@ -160,28 +285,66 @@
     selectedComment = btn.dataset.type;
   };
 
+  var pageSelectUx = document.getElementById('pageSelectUx');
+  var commentTypeUx = document.getElementById('commentTypeUx');
+  var textareaUx = document.getElementById('changeUx');
+  var selectedCommentUx = null;
+
+  function fillPageSelect(selectEl, msg) {
+    selectEl.innerHTML = '';
+    (msg.pages || []).forEach(function (p) {
+      var opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
+      if (msg.changelogPageId && p.id === msg.changelogPageId) opt.selected = true;
+      else if (!msg.changelogPageId && p.isCurrent) opt.selected = true;
+      selectEl.appendChild(opt);
+    });
+  }
+
+  function fillPageSelectUx(msg) {
+    pageSelectUx.innerHTML = '';
+    var optNew = document.createElement('option');
+    optNew.value = 'new';
+    optNew.textContent = '— Crear página nueva —';
+    pageSelectUx.appendChild(optNew);
+    (msg.pages || []).forEach(function (p) {
+      if (p.id === msg.changelogPageId) return;
+      var opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
+      pageSelectUx.appendChild(opt);
+    });
+  }
+
+  commentTypeUx.onclick = function (e) {
+    var btn = e.target.closest('button[data-type]');
+    if (!btn) return;
+    commentTypeUx.querySelectorAll('button').forEach(function (b) { b.classList.remove('selected'); });
+    btn.classList.add('selected');
+    selectedCommentUx = btn.dataset.type;
+  };
+
   window.onmessage = function (event) {
     var msg = event.data.pluginMessage;
     if (!msg) return;
     if (msg.type === 'init') {
-      pageSelect.innerHTML = '';
-      (msg.pages || []).forEach(function (p) {
-        var opt = document.createElement('option');
-        opt.value = p.id;
-        opt.textContent = p.name;
-        if (msg.changelogPageId && p.id === msg.changelogPageId) opt.selected = true;
-        else if (!msg.changelogPageId && p.isCurrent) opt.selected = true;
-        pageSelect.appendChild(opt);
-      });
+      fillPageSelect(pageSelect, msg);
+      fillPageSelectUx(msg);
     }
   };
 
   document.getElementById('add').onclick = function () {
     var text = textarea.value.trim();
     if (!text) return;
+    if (selectedComment === null) {
+      alert('Selecciona un tipo de comentario.');
+      return;
+    }
     parent.postMessage({
       pluginMessage: {
         type: 'add-entry',
+        flow: 'file',
         pageId: pageSelect.value,
         versionType: selectedVersion,
         commentType: selectedComment,
@@ -192,7 +355,30 @@
     textarea.value = '';
   };
 
+  document.getElementById('addUx').onclick = function () {
+    var text = textareaUx.value.trim();
+    if (!text) return;
+    if (selectedCommentUx === null) {
+      alert('Selecciona un tipo de comentario.');
+      return;
+    }
+    parent.postMessage({
+      pluginMessage: {
+        type: 'add-entry',
+        flow: 'uxui',
+        uxuiPageId: pageSelectUx.value || 'new',
+        commentType: selectedCommentUx,
+        text: text,
+        saveToVersionHistory: false
+      }
+    }, '*');
+    textareaUx.value = '';
+  };
+
   document.getElementById('cancel').onclick = function () {
+    parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*');
+  };
+  document.getElementById('cancelUx').onclick = function () {
     parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*');
   };
 </script>
