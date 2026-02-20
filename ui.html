@@ -169,7 +169,8 @@
         var opt = document.createElement('option');
         opt.value = p.id;
         opt.textContent = p.name;
-        if (p.isCurrent) opt.selected = true;
+        if (msg.changelogPageId && p.id === msg.changelogPageId) opt.selected = true;
+        else if (!msg.changelogPageId && p.isCurrent) opt.selected = true;
         pageSelect.appendChild(opt);
       });
     }
