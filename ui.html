@@ -57,6 +57,10 @@
     outline: none;
     border-color: #0d99ff;
   }
+  .comment-field.field-error {
+    border-color: #c00;
+    box-shadow: 0 0 0 1px #c00;
+  }
   .comment-field,
   .comment-field * { font-weight: normal !important; }
   .comment-field.placeholder-text::before {
@@ -94,7 +98,7 @@
     margin-bottom: 12px;
     flex-wrap: wrap;
   }
-  button#add {
+  button#add, button#addUx {
     padding: 8px 14px;
     border: none;
     border-radius: 6px;
@@ -104,8 +108,8 @@
     color: white;
     cursor: pointer;
   }
-  button#add:hover { background: #0b85e0; }
-  button#cancel {
+  button#add:hover, button#addUx:hover { background: #0b85e0; }
+  button#cancel, button#cancelUx {
     padding: 8px 14px;
     border: none;
     border-radius: 6px;
@@ -114,7 +118,7 @@
     color: #333;
     cursor: pointer;
   }
-  button#cancel:hover { background: #e0e0e0; }
+  button#cancel:hover, button#cancelUx:hover { background: #e0e0e0; }
   .checkbox-wrap {
     display: flex;
     align-items: center;
@@ -213,8 +217,8 @@
     <button type="button" data-type="custom">Custom</button>
   </div>
 
-  <label for="change">Cambios realizados</label>
-  <div id="change" class="comment-field" contenteditable="true" data-placeholder="Haz clic en los tipos de arriba para insertarlos aquí, o escribe directamente..."></div>
+  <label for="change">Cambios realizados <span style="color:#c00" aria-hidden="true">*</span></label>
+  <div id="change" class="comment-field" contenteditable="true" data-placeholder="Haz clic en los tipos de arriba para insertarlos aquí, o escribe directamente..." aria-required="true"></div>
 
   <div class="buttons">
     <button id="add">Añadir al changelog</button>
@@ -249,8 +253,8 @@
     <button type="button" data-type="custom">Custom</button>
   </div>
 
-  <label for="changeUx">Cambios realizados</label>
-  <div id="changeUx" class="comment-field" contenteditable="true" data-placeholder="Haz clic en los tipos de arriba para insertarlos aquí, o escribe directamente..."></div>
+  <label for="changeUx">Cambios realizados <span style="color:#c00" aria-hidden="true">*</span></label>
+  <div id="changeUx" class="comment-field" contenteditable="true" data-placeholder="Haz clic en los tipos de arriba para insertarlos aquí, o escribe directamente..." aria-required="true"></div>
 
   <div class="buttons">
     <button id="addUx">Añadir al changelog</button>
@@ -309,6 +313,19 @@
     return (field.innerText || field.textContent || '').trim();
   }
 
+  function isTypeOnlyLine(line) {
+    var t = (line || '').trim().replace(/^[^\x00-\x7F]+\s*/, '').trim();
+    return t === 'Añadido' || t === 'Borrado' || t === 'Cambio' || t === 'Fixed' || t === 'Custom';
+  }
+
+  function hasDescription(text) {
+    var lines = (text || '').split(/\n/).map(function (l) { return l.trim(); }).filter(Boolean);
+    for (var i = 0; i < lines.length; i++) {
+      if (!isTypeOnlyLine(lines[i])) return true;
+    }
+    return false;
+  }
+
   function setPlaceholder(field) {
     var isEmpty = getCommentText(field).length === 0;
     if (isEmpty) field.classList.add('placeholder-text');
@@ -321,7 +338,7 @@
     document.execCommand('insertText', false, text);
   }
 
-  commentField.addEventListener('input', function () { setPlaceholder(commentField); });
+  commentField.addEventListener('input', function () { setPlaceholder(commentField); commentField.classList.remove('field-error'); });
   commentField.addEventListener('focus', function () { setPlaceholder(commentField); });
   commentField.addEventListener('blur', function () { setPlaceholder(commentField); });
   commentField.addEventListener('paste', pastePlain);
@@ -356,7 +373,7 @@
     selectedUxUiVersion = btn.dataset.versionUx;
   };
 
-  commentFieldUx.addEventListener('input', function () { setPlaceholder(commentFieldUx); });
+  commentFieldUx.addEventListener('input', function () { setPlaceholder(commentFieldUx); commentFieldUx.classList.remove('field-error'); });
   commentFieldUx.addEventListener('focus', function () { setPlaceholder(commentFieldUx); });
   commentFieldUx.addEventListener('blur', function () { setPlaceholder(commentFieldUx); });
   commentFieldUx.addEventListener('paste', pastePlain);
@@ -403,8 +420,15 @@
 
   document.getElementById('add').onclick = function () {
     var text = getCommentText(commentField);
+    commentField.classList.remove('field-error');
     if (!text) {
-      alert('Añade al menos un tipo de comentario (clic en los botones) o escribe el cambio.');
+      commentField.classList.add('field-error');
+      alert('El campo Cambios realizados es obligatorio. Añade un tipo de comentario (clic en los botones) y escribe la descripción del cambio.');
+      return;
+    }
+    if (!hasDescription(text)) {
+      commentField.classList.add('field-error');
+      alert('Es obligatorio describir el cambio. No basta con elegir el tipo (Añadido, Borrado, etc.); escribe la descripción debajo de cada tipo.');
       return;
     }
     parent.postMessage({
@@ -423,8 +447,15 @@
 
   document.getElementById('addUx').onclick = function () {
     var text = getCommentText(commentFieldUx);
+    commentFieldUx.classList.remove('field-error');
     if (!text) {
-      alert('Añade al menos un tipo de comentario (clic en los botones) o escribe el cambio.');
+      commentFieldUx.classList.add('field-error');
+      alert('El campo Cambios realizados es obligatorio. Añade un tipo de comentario (clic en los botones) y escribe la descripción del cambio.');
+      return;
+    }
+    if (!hasDescription(text)) {
+      commentFieldUx.classList.add('field-error');
+      alert('Es obligatorio describir el cambio. No basta con elegir el tipo (Añadido, Borrado, etc.); escribe la descripción debajo de cada tipo.');
       return;
     }
     parent.postMessage({
