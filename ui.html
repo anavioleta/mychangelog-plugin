@@ -9,19 +9,21 @@
   }
   h2 {
     margin: 0 0 8px 0;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 500;
+    color: #364152;
   }
   .subtitle {
-    font-size: 11px;
-    color: #666;
-    margin-bottom: 14px;
+    font-size: 14px;
+    color: #697586;
+    margin-bottom: 16px;
   }
   label {
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
     font-weight: 500;
-    color: #555;
+    color: #364152;
+    font-size: 14px;
   }
   select, textarea {
     width: 100%;
@@ -43,6 +45,8 @@
   .comment-field {
     width: 100%;
     min-height: 80px;
+    max-height: 200px;
+    overflow-y: auto;
     padding: 8px 10px;
     margin-bottom: 12px;
     border: 1px solid #e0e0e0;
@@ -74,22 +78,26 @@
     margin-bottom: 12px;
   }
   .btn-group button {
-    padding: 6px 10px;
+    padding: 12px 12px;
     border: 1px solid #ddd;
     border-radius: 6px;
-    font-size: 11px;
+    font-size: 14px;
     background: #fff;
     cursor: pointer;
     transition: all 0.15s;
+    width: 33,33%;
   }
+
+
   .btn-group button:hover {
     border-color: #0d99ff;
     background: #f5f9ff;
   }
   .btn-group button.selected {
-    background: #0d99ff;
+    background: #ffffff;
     border-color: #0d99ff;
-    color: white;
+    border-width: 1px;
+    color: #364152;
   }
   .buttons {
     display: flex;
@@ -109,16 +117,6 @@
     cursor: pointer;
   }
   button#add:hover, button#addUx:hover { background: #0b85e0; }
-  button#cancel, button#cancelUx {
-    padding: 8px 14px;
-    border: none;
-    border-radius: 6px;
-    font-size: 12px;
-    background: #f0f0f0;
-    color: #333;
-    cursor: pointer;
-  }
-  button#cancel:hover, button#cancelUx:hover { background: #e0e0e0; }
   .checkbox-wrap {
     display: flex;
     align-items: center;
@@ -135,14 +133,14 @@
   }
   .mode-screen h2 {
     margin-bottom: 20px;
-    font-size: 13px;
-    color: #666;
+    font-size: 18px;
+    color: #364152;
     font-weight: 500;
   }
   .mode-options {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
   }
   .mode-btn {
     display: flex;
@@ -150,14 +148,14 @@
     align-items: center;
     gap: 10px;
     padding: 20px 16px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid #CDD5DF;
     border-radius: 10px;
     background: #fff;
     cursor: pointer;
     transition: all 0.2s;
-    font-size: 13px;
-    font-weight: 600;
-    color: #333;
+    font-size: 16px;
+    font-weight: 500;
+    color: #364152;
   }
   .mode-btn:hover {
     border-color: #0d99ff;
@@ -170,13 +168,16 @@
   .btn-back {
     margin-top: 12px;
     padding: 6px 10px;
-    font-size: 11px;
-    color: #666;
+    font-size: 14px;
+    color:#364152;
     background: transparent;
     border: none;
     cursor: pointer;
+    margin-bottom: 16px;
+    border: 1px solid #CDD5DF;
+    border-radius: 99999px;
   }
-  .btn-back:hover { color: #0d99ff; }
+  .btn-back:hover { color: #0d99ff;   background: #f0f0f0;}
 </style>
 
 <div id="screenMode" class="screen active">
@@ -202,9 +203,9 @@
 
   <label>Tipo de versión</label>
   <div class="btn-group" id="versionType">
-    <button type="button" data-version="patch">Patch v0.1.1</button>
-    <button type="button" data-version="minor">Minor v0.2.0</button>
-    <button type="button" data-version="major">Major v1.0.0</button>
+    <button type="button" data-version="patch">Patch<br>v0.1.1</button>
+    <button type="button" data-version="minor">Minor<br>v0.2.0</button>
+    <button type="button" data-version="major">Major<br>v1.0.0</button>
   </div>
 
   <label>Tipo de comentario</label>
@@ -223,8 +224,6 @@
   <div class="buttons">
     <button id="add">Añadir al changelog</button>
   </div>
-
-  <button id="cancel">Cerrar</button>
 </div>
 
 <div id="screenUxUiCommit" class="screen">
@@ -259,8 +258,6 @@
   <div class="buttons">
     <button id="addUx">Añadir al changelog</button>
   </div>
-
-  <button id="cancelUx">Cerrar</button>
 </div>
 
 <script>
@@ -473,10 +470,4 @@
     setPlaceholder(commentFieldUx);
   };
 
-  document.getElementById('cancel').onclick = function () {
-    parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*');
-  };
-  document.getElementById('cancelUx').onclick = function () {
-    parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*');
-  };
 </script>
