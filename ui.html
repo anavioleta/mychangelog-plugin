@@ -40,6 +40,29 @@
     outline: none;
     border-color: #0d99ff;
   }
+  .comment-field {
+    width: 100%;
+    min-height: 80px;
+    padding: 8px 10px;
+    margin-bottom: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  .comment-field:focus {
+    outline: none;
+    border-color: #0d99ff;
+  }
+  .comment-field,
+  .comment-field * { font-weight: normal !important; }
+  .comment-field.placeholder-text::before {
+    content: attr(data-placeholder);
+    color: #999;
+  }
   .btn-group {
     display: flex;
     flex-wrap: wrap;
@@ -171,37 +194,31 @@
 <div id="screenFileCommit" class="screen">
   <button type="button" class="btn-back" id="backFromFile">← Volver</button>
   <h2>Documentar cambios</h2>
-  <p class="subtitle">Elige la pagina, el tipo de version y describe que cambiaste.</p>
+  <p class="subtitle">Elige el tipo de versión y describe qué cambiaste. Se guardará en la página Changelog y en el historial de Figma.</p>
 
-  <label>Pagina donde anadir el changelog</label>
-  <select id="pageSelect"></select>
-
-<label>Tipo de version</label>
-<div class="btn-group" id="versionType">
-  <button type="button" data-version="patch">Patch v0.1.1</button>
-  <button type="button" data-version="minor">Minor v0.2.0</button>
-  <button type="button" data-version="major">Major v1.0.0</button>
-</div>
-
-<label>Tipo de comentario</label>
-<div class="btn-group" id="commentType">
-  <button type="button" data-type="added">&#128640; Añadido</button>
-  <button type="button" data-type="deleted">&#128128; Borrado</button>
-  <button type="button" data-type="changed">&#128736; Cambio</button>
-  <button type="button" data-type="fixed">&#128138; Fixed</button>
-  <button type="button" data-type="custom">Custom</button>
-</div>
-
-<label for="change">Cambios realizados</label>
-<textarea id="change" placeholder="Ej: Actualice el boton primario, corregi espaciados en el header..."></textarea>
-
-<div class="buttons">
-  <button id="add">Anadir al changelog</button>
-  <div class="checkbox-wrap">
-    <input type="checkbox" id="saveVersion" checked>
-    <label for="saveVersion" style="margin:0;font-weight:400">Subir al historial de versiones</label>
+  <label>Tipo de versión</label>
+  <div class="btn-group" id="versionType">
+    <button type="button" data-version="patch">Patch v0.1.1</button>
+    <button type="button" data-version="minor">Minor v0.2.0</button>
+    <button type="button" data-version="major">Major v1.0.0</button>
   </div>
-</div>
+
+  <label>Tipo de comentario</label>
+  <p class="subtitle" style="margin-top:0;margin-bottom:8px">Haz clic en uno o varios para añadirlos al texto.</p>
+  <div class="btn-group" id="commentType">
+    <button type="button" data-type="added">&#128640; Añadido</button>
+    <button type="button" data-type="deleted">&#128128; Borrado</button>
+    <button type="button" data-type="changed">&#128736; Cambio</button>
+    <button type="button" data-type="fixed">&#128138; Fixed</button>
+    <button type="button" data-type="custom">Custom</button>
+  </div>
+
+  <label for="change">Cambios realizados</label>
+  <div id="change" class="comment-field" contenteditable="true" data-placeholder="Haz clic en los tipos de arriba para insertarlos aquí, o escribe directamente..."></div>
+
+  <div class="buttons">
+    <button id="add">Añadir al changelog</button>
+  </div>
 
   <button id="cancel">Cerrar</button>
 </div>
@@ -216,7 +233,14 @@
     <option value="new">— Crear página nueva —</option>
   </select>
 
+  <label>Tipo de versión</label>
+  <div class="btn-group" id="versionTypeUx">
+    <button type="button" data-version-ux="ui" class="selected">UI</button>
+    <button type="button" data-version-ux="ux">UX</button>
+  </div>
+
   <label>Tipo de comentario</label>
+  <p class="subtitle" style="margin-top:0;margin-bottom:8px">Haz clic en uno o varios para añadirlos al texto.</p>
   <div class="btn-group" id="commentTypeUx">
     <button type="button" data-type="added">&#128640; Añadido</button>
     <button type="button" data-type="deleted">&#128128; Borrado</button>
@@ -226,7 +250,7 @@
   </div>
 
   <label for="changeUx">Cambios realizados</label>
-  <textarea id="changeUx" placeholder="Ej: Actualicé el botón primario, corregí espaciados en el header..."></textarea>
+  <div id="changeUx" class="comment-field" contenteditable="true" data-placeholder="Haz clic en los tipos de arriba para insertarlos aquí, o escribe directamente..."></div>
 
   <div class="buttons">
     <button id="addUx">Añadir al changelog</button>
@@ -260,14 +284,47 @@
     showScreen(screenMode);
   };
 
-  var pageSelect = document.getElementById('pageSelect');
   var versionTypeEl = document.getElementById('versionType');
   var commentTypeEl = document.getElementById('commentType');
-  var textarea = document.getElementById('change');
-  var saveVersionCheck = document.getElementById('saveVersion');
+  var commentField = document.getElementById('change');
 
   var selectedVersion = 'patch';
-  var selectedComment = null;
+
+  function insertTypeLine(field, line) {
+    field.focus();
+    if (field.childNodes.length) field.appendChild(document.createElement('br'));
+    field.appendChild(document.createTextNode(line));
+    var br = document.createElement('br');
+    field.appendChild(br);
+    var sel = window.getSelection();
+    var range = document.createRange();
+    range.setStartAfter(br);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    field.focus();
+  }
+
+  function getCommentText(field) {
+    return (field.innerText || field.textContent || '').trim();
+  }
+
+  function setPlaceholder(field) {
+    var isEmpty = getCommentText(field).length === 0;
+    if (isEmpty) field.classList.add('placeholder-text');
+    else field.classList.remove('placeholder-text');
+  }
+
+  function pastePlain(e) {
+    e.preventDefault();
+    var text = (e.clipboardData || window.clipboardData).getData('text/plain');
+    document.execCommand('insertText', false, text);
+  }
+
+  commentField.addEventListener('input', function () { setPlaceholder(commentField); });
+  commentField.addEventListener('focus', function () { setPlaceholder(commentField); });
+  commentField.addEventListener('blur', function () { setPlaceholder(commentField); });
+  commentField.addEventListener('paste', pastePlain);
 
   versionTypeEl.onclick = function (e) {
     var btn = e.target.closest('button[data-version]');
@@ -280,27 +337,29 @@
   commentTypeEl.onclick = function (e) {
     var btn = e.target.closest('button[data-type]');
     if (!btn) return;
-    commentTypeEl.querySelectorAll('button').forEach(function (b) { b.classList.remove('selected'); });
-    btn.classList.add('selected');
-    selectedComment = btn.dataset.type;
+    insertTypeLine(commentField, btn.textContent.trim());
+    setPlaceholder(commentField);
   };
 
   var pageSelectUx = document.getElementById('pageSelectUx');
+  var versionTypeUxEl = document.getElementById('versionTypeUx');
   var commentTypeUx = document.getElementById('commentTypeUx');
-  var textareaUx = document.getElementById('changeUx');
-  var selectedCommentUx = null;
+  var commentFieldUx = document.getElementById('changeUx');
 
-  function fillPageSelect(selectEl, msg) {
-    selectEl.innerHTML = '';
-    (msg.pages || []).forEach(function (p) {
-      var opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = p.name;
-      if (msg.changelogPageId && p.id === msg.changelogPageId) opt.selected = true;
-      else if (!msg.changelogPageId && p.isCurrent) opt.selected = true;
-      selectEl.appendChild(opt);
-    });
-  }
+  var selectedUxUiVersion = 'ui';
+
+  versionTypeUxEl.onclick = function (e) {
+    var btn = e.target.closest('button[data-version-ux]');
+    if (!btn) return;
+    versionTypeUxEl.querySelectorAll('button').forEach(function (b) { b.classList.remove('selected'); });
+    btn.classList.add('selected');
+    selectedUxUiVersion = btn.dataset.versionUx;
+  };
+
+  commentFieldUx.addEventListener('input', function () { setPlaceholder(commentFieldUx); });
+  commentFieldUx.addEventListener('focus', function () { setPlaceholder(commentFieldUx); });
+  commentFieldUx.addEventListener('blur', function () { setPlaceholder(commentFieldUx); });
+  commentFieldUx.addEventListener('paste', pastePlain);
 
   function fillPageSelectUx(msg) {
     pageSelectUx.innerHTML = '';
@@ -320,46 +379,52 @@
   commentTypeUx.onclick = function (e) {
     var btn = e.target.closest('button[data-type]');
     if (!btn) return;
-    commentTypeUx.querySelectorAll('button').forEach(function (b) { b.classList.remove('selected'); });
-    btn.classList.add('selected');
-    selectedCommentUx = btn.dataset.type;
+    insertTypeLine(commentFieldUx, btn.textContent.trim());
+    setPlaceholder(commentFieldUx);
   };
+
+  function inferCommentType(text) {
+    var first = text.trim().split('\n')[0].trim();
+    if (/Fixed/i.test(first)) return 'fixed';
+    if (/Añadido/i.test(first)) return 'added';
+    if (/Borrado/i.test(first)) return 'deleted';
+    if (/Cambio/i.test(first)) return 'changed';
+    if (/Custom/i.test(first)) return 'custom';
+    return 'custom';
+  }
 
   window.onmessage = function (event) {
     var msg = event.data.pluginMessage;
     if (!msg) return;
     if (msg.type === 'init') {
-      fillPageSelect(pageSelect, msg);
       fillPageSelectUx(msg);
     }
   };
 
   document.getElementById('add').onclick = function () {
-    var text = textarea.value.trim();
-    if (!text) return;
-    if (selectedComment === null) {
-      alert('Selecciona un tipo de comentario.');
+    var text = getCommentText(commentField);
+    if (!text) {
+      alert('Añade al menos un tipo de comentario (clic en los botones) o escribe el cambio.');
       return;
     }
     parent.postMessage({
       pluginMessage: {
         type: 'add-entry',
         flow: 'file',
-        pageId: pageSelect.value,
         versionType: selectedVersion,
-        commentType: selectedComment,
+        commentType: inferCommentType(text),
         text: text,
-        saveToVersionHistory: saveVersionCheck.checked
+        saveToVersionHistory: true
       }
     }, '*');
-    textarea.value = '';
+    commentField.innerHTML = '';
+    setPlaceholder(commentField);
   };
 
   document.getElementById('addUx').onclick = function () {
-    var text = textareaUx.value.trim();
-    if (!text) return;
-    if (selectedCommentUx === null) {
-      alert('Selecciona un tipo de comentario.');
+    var text = getCommentText(commentFieldUx);
+    if (!text) {
+      alert('Añade al menos un tipo de comentario (clic en los botones) o escribe el cambio.');
       return;
     }
     parent.postMessage({
@@ -367,12 +432,14 @@
         type: 'add-entry',
         flow: 'uxui',
         uxuiPageId: pageSelectUx.value || 'new',
-        commentType: selectedCommentUx,
+        uxUiVersionType: selectedUxUiVersion,
+        commentType: inferCommentType(text),
         text: text,
         saveToVersionHistory: false
       }
     }, '*');
-    textareaUx.value = '';
+    commentFieldUx.innerHTML = '';
+    setPlaceholder(commentFieldUx);
   };
 
   document.getElementById('cancel').onclick = function () {
