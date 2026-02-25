@@ -10,7 +10,7 @@
   "ui": "ui.html",
   "networkAccess": {
     "allowedDomains": ["*"],
-    "reasoning": "Para cargar el avatar del usuario en el changelog"
+    "reasoning": "To load the user avatar in the changelog"
   },
   "permissions": ["currentuser"]
 }
