@@ -1,21 +1,24 @@
-# My changelog – Plugin de Figma (JavaScript)
+# My Changelog – Figma Plugin
 
-Plugin de Figma escrito solo en **JavaScript**. No hace falta compilar nada.
+Figma plugin to document design changes with versioning. Supports File commits (with Figma version history) and UX/UI commits.
 
-## Cómo probar el plugin
+## How to try the plugin
 
-1. Abre la **app de escritorio de Figma** (los plugins se prueban ahí).
-2. Ve a **Plugins** → **Development** → **Import plugin from manifest…**
-3. Elige la carpeta de este proyecto y selecciona el archivo `manifest.json`.
+1. Open the **Figma desktop app** (plugins run there).
+2. Go to **Plugins** → **Development** → **Import plugin from manifest…**
+3. Select the project folder and choose `manifest.json`.
 
-## Estructura
+## Structure
 
-- **`code.js`** – Código principal del plugin (acceso al documento de Figma).
-- **`ui.html`** – Interfaz del plugin (HTML + script en el navegador).
-- **`manifest.json`** – Configuración del plugin (nombre, entrada, etc.).
+- **`code.js`** – Main plugin code (Figma document API).
+- **`ui.html`** – Plugin UI (HTML + scripts).
+- **`manifest.json`** – Plugin configuration.
 
-## Cómo funciona
+## Features
 
-El plugin muestra una ventana, pide un número y crea esa cantidad de rectángulos naranjas en la página actual.
+- **File commit**: Documents changes in the Changelog page with semantic versioning (beta, patch, minor, major).
+- **UX/UI commit**: Documents design changes in a separate UX/UI page, with UI/UX type selection.
+- Version history support for File commits.
+- Timeline layout with indentation for major/minor/patch entries.
 
-Más información: [Plugin Quickstart Guide](https://www.figma.com/plugin-docs/plugin-quickstart-guide/)
+More info: [Figma Plugin Quickstart](https://www.figma.com/plugin-docs/plugin-quickstart-guide/)
