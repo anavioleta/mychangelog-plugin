@@ -758,7 +758,6 @@ function maybeSaveVersionHistory(msg, version, text) {
 }
 
 function sendInit() {
-  var changelogPage = getOrCreateChangelogPage();
   var pages = figma.root.children;
   var list = [];
   var curId = figma.currentPage.id;
