@@ -330,7 +330,8 @@ async function createEntryFrame(e, opts) {
   meta.fontName = fontR;
   meta.fontSize = 12;
   meta.fills = [{ type: 'SOLID', color: rgb(156, 163, 175) }];
-  meta.characters = (e.author || 'User') + ' committed ' + timeAgo(e.date) + ' ago';
+  var ta = timeAgo(e.date);
+  meta.characters = (e.author || 'User') + ' committed ' + ta + (ta === 'just now' ? '' : ' ago');
   meta.textAutoResize = 'HEIGHT';
   meta.resize(Math.max(120, descW - 80), 14);
 
@@ -395,6 +396,23 @@ async function createEntryFrame(e, opts) {
     }
   }
 
+  var urls = e.sourceUrls && e.sourceUrls.length ? e.sourceUrls : (e.sourceUrl ? [e.sourceUrl] : []);
+  for (var u = 0; u < urls.length; u++) {
+    var url = String(urls[u]).trim();
+    if (!url) continue;
+    var linkText = figma.createText();
+    linkText.fontName = fontR;
+    linkText.fontSize = 11;
+    linkText.lineHeight = { value: 14, unit: 'PIXELS' };
+    linkText.fills = [{ type: 'SOLID', color: rgb(69, 104, 246) }];
+    linkText.characters = (urls.length > 1 ? (u + 1) + '. ' : '') + 'View in Figma \u2192';
+    linkText.textAutoResize = 'WIDTH_AND_HEIGHT';
+    try {
+      linkText.setRangeHyperlink(0, linkText.characters.length, { type: 'URL', value: url });
+    } catch (err) {}
+    entryFrame.appendChild(linkText);
+  }
+
   entryFrame.resize(FRAME_WIDTH, entryFrame.height);
   return entryFrame;
 }
@@ -424,7 +442,8 @@ async function updateTimeAgoInEntryFrames(frame, entries) {
     var meta = getMetaTextNode(entryNode);
     if (meta && entry) {
       try { await figma.loadFontAsync(meta.fontName); } catch (e) {}
-      meta.characters = (entry.author || 'User') + ' committed ' + timeAgo(entry.date) + ' ago';
+      var ta = timeAgo(entry.date);
+      meta.characters = (entry.author || 'User') + ' committed ' + ta + (ta === 'just now' ? '' : ' ago');
     }
     entryIndex++;
   }
@@ -775,7 +794,7 @@ figma.ui.onmessage = function (msg) {
   if (msg.type === 'resize-ui') {
     var screen = msg.screen || 'screenMode';
     if (screen === 'screenUxUiCommit' || screen === 'screenFileCommit') {
-      figma.ui.resize(560, 760);
+      figma.ui.resize(560, 920);
     } else {
       figma.ui.resize(560, 560);
     }
@@ -818,7 +837,8 @@ figma.ui.onmessage = function (msg) {
         author: author.name,
         photoUrl: author.photoUrl,
         commentType: msg.commentType || 'added',
-        text: String(msg.text || '').trim()
+        text: String(msg.text || '').trim(),
+        sourceUrls: Array.isArray(msg.sourceUrls) ? msg.sourceUrls.filter(function (u) { return u && String(u).trim(); }) : (msg.sourceUrl ? [String(msg.sourceUrl).trim()] : [])
       };
       entries.unshift(newEntry);
 

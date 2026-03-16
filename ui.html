@@ -32,7 +32,7 @@
     color: #364152;
     font-size: 14px;
   }
-  select, textarea {
+  select, textarea, input[type="text"] {
     width: 100%;
     padding: 10px 10px;
     margin-bottom: 12px;
@@ -42,6 +42,71 @@
     font-size: 12px;
     color: #364152;
     padding-right: 36px;
+  }
+  input[type="text"] {
+    padding-right: 10px;
+  }
+  .url-list {
+    margin-bottom: 12px;
+  }
+  .url-row input.field-error {
+    border: 2px solid #EA0B16;
+  }
+  .url-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .url-row input {
+    flex: 1;
+    margin-bottom: 0;
+  }
+  .btn-remove-url {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background: #fff;
+    color: #697586;
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+    transition: all 0.15s;
+  }
+  .btn-remove-url:hover {
+    border-color: #4568F6;
+    color: #4568F6;
+    background: #f5f9ff;
+  }
+  .btn-remove-url.hidden {
+    display: none;
+  }
+  .btn-add-url {
+    padding: 8px 12px;
+    border: 2px dashed #cdd5df;
+    border-radius: 6px;
+    background: #fff;
+    color: #4568F6;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-add-url:hover {
+    border-color: #4568F6;
+    background: #f5f9ff;
+  }
+  .btn-add-url:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: #e0e0e0;
+  }
+  .btn-add-url:disabled:hover {
+    background: #fff;
+    border-color: #e0e0e0;
   }
   select {
     appearance: none;
@@ -54,7 +119,7 @@
     min-height: 80px;
     resize: vertical;
   }
-  select:focus, textarea:focus {
+  select:focus, textarea:focus, input[type="text"]:focus {
     outline: none;
     border-color: #4568F6;
   }
@@ -80,8 +145,7 @@
     border-color: #4568F6;
   }
   .comment-field.field-error {
-    border-color: #c00;
-    box-shadow: 0 0 0 1px #c00;
+    border: 2px solid #EA0B16;
   }
   .comment-field,
   .comment-field * { font-weight: normal !important; }
@@ -172,24 +236,32 @@
   #screenFileCommit.active {
     display: grid;
     grid-template-rows: auto 1fr auto;
-    min-height: calc(100vh - 32px);
+    height: 100%;
+    max-height: calc(100vh - 32px);
     overflow: hidden;
   }
   #screenUxUiCommit.active {
     display: grid;
     grid-template-rows: auto 1fr auto;
-    min-height: calc(100vh - 32px);
+    height: 100%;
+    max-height: calc(100vh - 32px);
     overflow: hidden;
   }
   #screenFileCommit .screen-body {
     min-height: 0;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-left: 2px;
+    padding-right: 2px;
   }
   #screenUxUiCommit .screen-body {
     min-height: 0;
-    overflow: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-left: 2px;
+    padding-right: 2px;
   }
-  #screenUxUiCommit {
+  #screenFileCommit, #screenUxUiCommit {
     overflow: hidden;
   }
   #screenFileCommit .screen-body label,
@@ -363,11 +435,21 @@
     <button type="button" data-type="custom">Custom</button>
   </div>
 
-  <label for="change">Changes made <span style="color:#c00" aria-hidden="true">*</span></label>
+  <label for="change">Changes made <span style="color:#EA0B16" aria-hidden="true">*</span></label>
   <div class="comment-field-wrap">
     <span class="placeholder-overlay" id="placeholder-change">Click on the comment types above to insert them and add your comment</span>
     <div id="change" class="comment-field" contenteditable="true" aria-required="true"></div>
   </div>
+
+  <label>Figma URLs</label>
+  <p class="subtitle" style="margin-top:0;margin-bottom:8px">Link frames, components or pages. Add multiple if needed.</p>
+  <div class="url-list" id="urlListFile">
+    <div class="url-row">
+      <input type="text" data-url-input placeholder="Paste link to frame, component or page" autocomplete="url" />
+      <button type="button" class="btn-remove-url hidden" title="Remove" aria-label="Remove URL">×</button>
+    </div>
+  </div>
+  <button type="button" class="btn-add-url" id="addUrlFile">+ Add URL</button>
   </div>
   <div class="buttons">
     <button id="add">Make File Commit</button>
@@ -409,11 +491,21 @@
     <button type="button" data-type="custom">Custom</button>
   </div>
 
-  <label for="changeUx">Changes made <span style="color:#c00" aria-hidden="true">*</span></label>
+  <label for="changeUx">Changes made <span style="color:#EA0B16" aria-hidden="true">*</span></label>
   <div class="comment-field-wrap">
     <span class="placeholder-overlay" id="placeholder-changeUx">Click on the comment types above to insert them and add your comment</span>
     <div id="changeUx" class="comment-field" contenteditable="true" aria-required="true"></div>
   </div>
+
+  <label>Figma URLs</label>
+  <p class="subtitle" style="margin-top:0;margin-bottom:8px">Link frames, components or pages. Add multiple if needed.</p>
+  <div class="url-list" id="urlListUx">
+    <div class="url-row">
+      <input type="text" data-url-input placeholder="Paste link to frame, component or page" autocomplete="url" />
+      <button type="button" class="btn-remove-url hidden" title="Remove" aria-label="Remove URL">×</button>
+    </div>
+  </div>
+  <button type="button" class="btn-add-url" id="addUrlUx">+ Add URL</button>
   </div>
   <div class="buttons">
     <button id="addUx">Make UX/UI Commit</button>
@@ -498,6 +590,105 @@
     return false;
   }
 
+  function normalizeUrl(val) {
+    if (!val) return '';
+    if (!/figma\.com/i.test(val)) return '';
+    val = val.trim();
+    if (!/^https?:\/\//i.test(val)) val = 'https://' + val;
+    return val;
+  }
+  function getSourceUrls(container) {
+    var inputs = container ? container.querySelectorAll('input[data-url-input]') : [];
+    var urls = [];
+    for (var i = 0; i < inputs.length; i++) {
+      var u = normalizeUrl(inputs[i].value);
+      if (u) urls.push(u);
+    }
+    return urls;
+  }
+  function hasEmptyUrlRows(container) {
+    var inputs = container ? container.querySelectorAll('input[data-url-input]') : [];
+    if (inputs.length < 2) return false;
+    for (var i = 0; i < inputs.length; i++) {
+      if (!(inputs[i].value || '').trim()) return true;
+    }
+    return false;
+  }
+  function markEmptyUrlInputs(container) {
+    var inputs = container ? container.querySelectorAll('input[data-url-input]') : [];
+    for (var i = 0; i < inputs.length; i++) {
+      var isEmpty = !(inputs[i].value || '').trim();
+      inputs[i].classList.toggle('field-error', isEmpty);
+    }
+  }
+  function hasInvalidUrlInputs(container) {
+    var inputs = container ? container.querySelectorAll('input[data-url-input]') : [];
+    for (var i = 0; i < inputs.length; i++) {
+      var val = (inputs[i].value || '').trim();
+      if (val && !/figma\.com/i.test(val)) return true;
+    }
+    return false;
+  }
+  function markInvalidUrlInputs(container) {
+    var inputs = container ? container.querySelectorAll('input[data-url-input]') : [];
+    for (var i = 0; i < inputs.length; i++) {
+      var val = (inputs[i].value || '').trim();
+      var isInvalid = val && !/figma\.com/i.test(val);
+      if (isInvalid) inputs[i].classList.add('field-error');
+    }
+  }
+  function clearUrlInputErrors(container) {
+    var inputs = container ? container.querySelectorAll('input[data-url-input]') : [];
+    for (var i = 0; i < inputs.length; i++) inputs[i].classList.remove('field-error');
+  }
+  var MAX_URLS = 7;
+  function updateAddUrlButton(container, btn) {
+    var count = container ? container.querySelectorAll('.url-row').length : 0;
+    if (btn) btn.disabled = count >= MAX_URLS;
+  }
+  function updateUrlRemoveButtons(container) {
+    var rows = container ? container.querySelectorAll('.url-row') : [];
+    var total = rows.length;
+    for (var i = 0; i < rows.length; i++) {
+      var inp = rows[i].querySelector('input[data-url-input]');
+      var btn = rows[i].querySelector('.btn-remove-url');
+      if (!inp || !btn) continue;
+      var hasContent = (inp.value || '').trim().length > 0;
+      var showRemove = total > 1 || hasContent;
+      btn.classList.toggle('hidden', !showRemove);
+    }
+  }
+  function createUrlRow() {
+    var row = document.createElement('div');
+    row.className = 'url-row';
+    row.innerHTML = '<input type="text" data-url-input placeholder="Paste link to frame, component or page" autocomplete="url" /><button type="button" class="btn-remove-url hidden" title="Remove" aria-label="Remove URL">×</button>';
+    var inp = row.querySelector('input[data-url-input]');
+    var btn = row.querySelector('.btn-remove-url');
+    function onChange() { updateUrlRemoveButtons(row.parentNode); }
+    inp.addEventListener('input', function () { onChange(); inp.classList.remove('field-error'); });
+    inp.addEventListener('paste', function () { setTimeout(function () { onChange(); inp.classList.remove('field-error'); }, 0); });
+    btn.onclick = function () {
+      var c = row.parentNode;
+      if (!c) return;
+      var addBtn = c.id === 'urlListFile' ? document.getElementById('addUrlFile') : document.getElementById('addUrlUx');
+      if (c.querySelectorAll('.url-row').length > 1) {
+        row.remove();
+      } else {
+        inp.value = '';
+        btn.classList.add('hidden');
+      }
+      updateUrlRemoveButtons(c);
+      updateAddUrlButton(c, addBtn);
+      clearUrlInputErrors(c);
+    };
+    return row;
+  }
+  function clearUrlList(container) {
+    if (!container) return;
+    container.innerHTML = '';
+    container.appendChild(createUrlRow());
+  }
+
   function setPlaceholder(field) {
     var text = (field.innerText || field.textContent || '').replace(/\s/g, '');
     var isEmpty = text.length === 0;
@@ -533,6 +724,54 @@
     insertTypeLine(commentField, btn.textContent.trim());
     setPlaceholder(commentField);
   };
+
+  var urlListFile = document.getElementById('urlListFile');
+  var urlListUx = document.getElementById('urlListUx');
+  document.getElementById('addUrlFile').onclick = function () {
+    if (urlListFile.querySelectorAll('.url-row').length >= MAX_URLS) {
+      alert('Maximum ' + MAX_URLS + ' URLs allowed.');
+      return;
+    }
+    urlListFile.appendChild(createUrlRow());
+    updateUrlRemoveButtons(urlListFile);
+    updateAddUrlButton(urlListFile, this);
+  };
+  document.getElementById('addUrlUx').onclick = function () {
+    if (urlListUx.querySelectorAll('.url-row').length >= MAX_URLS) {
+      alert('Maximum ' + MAX_URLS + ' URLs allowed.');
+      return;
+    }
+    urlListUx.appendChild(createUrlRow());
+    updateUrlRemoveButtons(urlListUx);
+    updateAddUrlButton(urlListUx, this);
+  };
+  updateAddUrlButton(urlListFile, document.getElementById('addUrlFile'));
+  updateAddUrlButton(urlListUx, document.getElementById('addUrlUx'));
+  [urlListFile, urlListUx].forEach(function (list) {
+    var inp = list.querySelector('input[data-url-input]');
+    var btn = list.querySelector('.btn-remove-url');
+    if (inp) {
+      inp.addEventListener('input', function () { updateUrlRemoveButtons(list); inp.classList.remove('field-error'); });
+      inp.addEventListener('paste', function () { setTimeout(function () { updateUrlRemoveButtons(list); inp.classList.remove('field-error'); }, 0); });
+    }
+    if (btn) {
+      var addBtn = list.id === 'urlListFile' ? document.getElementById('addUrlFile') : document.getElementById('addUrlUx');
+      btn.onclick = function () {
+        var r = this.closest('.url-row');
+        if (!r || !list) return;
+        if (list.querySelectorAll('.url-row').length > 1) {
+          r.remove();
+        } else {
+          var i = r.querySelector('input[data-url-input]');
+          if (i) { i.value = ''; }
+          btn.classList.add('hidden');
+        }
+        updateUrlRemoveButtons(list);
+        updateAddUrlButton(list, addBtn);
+        clearUrlInputErrors(list);
+      };
+    }
+  });
 
   var pageSelectUx = document.getElementById('pageSelectUx');
   var versionTypeUxUiEl = document.getElementById('versionTypeUxUi');
@@ -611,21 +850,34 @@
   document.getElementById('add').onclick = function () {
     var text = getCommentText(commentField);
     commentField.classList.remove('field-error');
+    clearUrlInputErrors(urlListFile);
+    var messages = [];
     if (!text) {
       commentField.classList.add('field-error');
-      alert('The Changes made field is required. Add a comment type (click the buttons) and write the change description.');
+      messages.push('The Changes made field is required. Add a comment type (click the buttons) and write the change description.');
+    } else {
+      if (!hasTagType(text)) {
+        commentField.classList.add('field-error');
+        messages.push('You cannot add comments without selecting a tag type. Click one of the buttons (Added, Deleted, Changed, Fixed, Custom) before writing.');
+      }
+      if (!hasDescription(text)) {
+        commentField.classList.add('field-error');
+        messages.push('You must describe the change. Choosing the type (Added, Deleted, etc.) is not enough; write the description below each type.');
+      }
+    }
+    if (hasEmptyUrlRows(urlListFile)) {
+      markEmptyUrlInputs(urlListFile);
+      messages.push('You have added URL fields that are empty. Fill in all URLs or remove the empty ones before committing.');
+    }
+    if (hasInvalidUrlInputs(urlListFile)) {
+      markInvalidUrlInputs(urlListFile);
+      messages.push('URL fields must contain only Figma links (e.g. figma.com/design/...). Remove or correct any invalid text.');
+    }
+    if (messages.length > 0) {
+      alert(messages.join('\n\n'));
       return;
     }
-    if (!hasTagType(text)) {
-      commentField.classList.add('field-error');
-      alert('You cannot add comments without selecting a tag type. Click one of the buttons (Added, Deleted, Changed, Fixed, Custom) before writing.');
-      return;
-    }
-    if (!hasDescription(text)) {
-      commentField.classList.add('field-error');
-      alert('You must describe the change. Choosing the type (Added, Deleted, etc.) is not enough; write the description below each type.');
-      return;
-    }
+    var sourceUrls = getSourceUrls(urlListFile);
     parent.postMessage({
       pluginMessage: {
         type: 'add-entry',
@@ -633,31 +885,47 @@
         versionType: selectedVersion,
         commentType: inferCommentType(text),
         text: text,
+        sourceUrls: sourceUrls,
         saveToVersionHistory: true
       }
     }, '*');
     commentField.innerHTML = '';
     setPlaceholder(commentField);
+    clearUrlList(urlListFile);
+    updateAddUrlButton(urlListFile, document.getElementById('addUrlFile'));
   };
 
   document.getElementById('addUx').onclick = function () {
     var text = getCommentText(commentFieldUx);
     commentFieldUx.classList.remove('field-error');
+    clearUrlInputErrors(urlListUx);
+    var messages = [];
     if (!text) {
       commentFieldUx.classList.add('field-error');
-      alert('The Changes made field is required. Add a comment type (click the buttons) and write the change description.');
+      messages.push('The Changes made field is required. Add a comment type (click the buttons) and write the change description.');
+    } else {
+      if (!hasTagType(text)) {
+        commentFieldUx.classList.add('field-error');
+        messages.push('You cannot add comments without selecting a tag type. Click one of the buttons (Added, Deleted, Changed, Fixed, Custom) before writing.');
+      }
+      if (!hasDescription(text)) {
+        commentFieldUx.classList.add('field-error');
+        messages.push('You must describe the change. Choosing the type (Added, Deleted, etc.) is not enough; write the description below each type.');
+      }
+    }
+    if (hasEmptyUrlRows(urlListUx)) {
+      markEmptyUrlInputs(urlListUx);
+      messages.push('You have added URL fields that are empty. Fill in all URLs or remove the empty ones before committing.');
+    }
+    if (hasInvalidUrlInputs(urlListUx)) {
+      markInvalidUrlInputs(urlListUx);
+      messages.push('URL fields must contain only Figma links (e.g. figma.com/design/...). Remove or correct any invalid text.');
+    }
+    if (messages.length > 0) {
+      alert(messages.join('\n\n'));
       return;
     }
-    if (!hasTagType(text)) {
-      commentFieldUx.classList.add('field-error');
-      alert('You cannot add comments without selecting a tag type. Click one of the buttons (Added, Deleted, Changed, Fixed, Custom) before writing.');
-      return;
-    }
-    if (!hasDescription(text)) {
-      commentFieldUx.classList.add('field-error');
-      alert('You must describe the change. Choosing the type (Added, Deleted, etc.) is not enough; write the description below each type.');
-      return;
-    }
+    var sourceUrls = getSourceUrls(urlListUx);
     parent.postMessage({
       pluginMessage: {
         type: 'add-entry',
@@ -667,11 +935,14 @@
         versionType: selectedUxVersion,
         commentType: inferCommentType(text),
         text: text,
+        sourceUrls: sourceUrls,
         saveToVersionHistory: false
       }
     }, '*');
     commentFieldUx.innerHTML = '';
     setPlaceholder(commentFieldUx);
+    clearUrlList(urlListUx);
+    updateAddUrlButton(urlListUx, document.getElementById('addUrlUx'));
   };
 
 </script>
