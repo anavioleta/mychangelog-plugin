@@ -118,6 +118,15 @@ function formatDateOnly(iso) {
   return month + ' ' + day + ', ' + year;
 }
 
+function formatTime(iso) {
+  var d = new Date(iso);
+  var h = d.getHours();
+  var m = d.getMinutes();
+  var ampm = h >= 12 ? 'pm' : 'am';
+  h = h % 12 || 12;
+  return h + ':' + (m < 10 ? '0' + m : m) + ampm;
+}
+
 function timeAgo(iso) {
   var d = new Date(iso);
   var now = new Date();
@@ -330,8 +339,7 @@ async function createEntryFrame(e, opts) {
   meta.fontName = fontR;
   meta.fontSize = 12;
   meta.fills = [{ type: 'SOLID', color: rgb(156, 163, 175) }];
-  var ta = timeAgo(e.date);
-  meta.characters = (e.author || 'User') + ' committed ' + ta + (ta === 'just now' ? '' : ' ago');
+  meta.characters = (e.author || 'Violeta') + ' committed at ' + formatTime(e.date);
   meta.textAutoResize = 'HEIGHT';
   meta.resize(Math.max(120, descW - 80), 14);
 
@@ -396,16 +404,30 @@ async function createEntryFrame(e, opts) {
     }
   }
 
-  var urls = e.sourceUrls && e.sourceUrls.length ? e.sourceUrls : (e.sourceUrl ? [e.sourceUrl] : []);
-  for (var u = 0; u < urls.length; u++) {
-    var url = String(urls[u]).trim();
-    if (!url) continue;
+  var links = [];
+  if (e.sourceLinks && e.sourceLinks.length) {
+    for (var i = 0; i < e.sourceLinks.length; i++) {
+      var item = e.sourceLinks[i];
+      var u = (item && item.url) ? String(item.url).trim() : '';
+      if (u) links.push({ label: (item.label && String(item.label).trim()) || '', url: u });
+    }
+  } else {
+    var urls = e.sourceUrls && e.sourceUrls.length ? e.sourceUrls : (e.sourceUrl ? [e.sourceUrl] : []);
+    for (var j = 0; j < urls.length; j++) {
+      var u2 = String(urls[j]).trim();
+      if (u2) links.push({ label: '', url: u2 });
+    }
+  }
+  for (var u = 0; u < links.length; u++) {
+    var lnk = links[u];
+    var url = lnk.url;
+    var displayLabel = lnk.label ? (lnk.label + ' \u2192') : (/figma\.com/i.test(url) ? 'View in Figma \u2192' : 'View link \u2192');
     var linkText = figma.createText();
     linkText.fontName = fontR;
     linkText.fontSize = 11;
     linkText.lineHeight = { value: 14, unit: 'PIXELS' };
     linkText.fills = [{ type: 'SOLID', color: rgb(69, 104, 246) }];
-    linkText.characters = (urls.length > 1 ? (u + 1) + '. ' : '') + 'View in Figma \u2192';
+    linkText.characters = (links.length > 1 ? (u + 1) + '. ' : '') + displayLabel;
     linkText.textAutoResize = 'WIDTH_AND_HEIGHT';
     try {
       linkText.setRangeHyperlink(0, linkText.characters.length, { type: 'URL', value: url });
@@ -442,8 +464,7 @@ async function updateTimeAgoInEntryFrames(frame, entries) {
     var meta = getMetaTextNode(entryNode);
     if (meta && entry) {
       try { await figma.loadFontAsync(meta.fontName); } catch (e) {}
-      var ta = timeAgo(entry.date);
-      meta.characters = (entry.author || 'User') + ' committed ' + ta + (ta === 'just now' ? '' : ' ago');
+      meta.characters = (entry.author || 'Violeta') + ' committed at ' + formatTime(entry.date);
     }
     entryIndex++;
   }
@@ -838,7 +859,17 @@ figma.ui.onmessage = function (msg) {
         photoUrl: author.photoUrl,
         commentType: msg.commentType || 'added',
         text: String(msg.text || '').trim(),
-        sourceUrls: Array.isArray(msg.sourceUrls) ? msg.sourceUrls.filter(function (u) { return u && String(u).trim(); }) : (msg.sourceUrl ? [String(msg.sourceUrl).trim()] : [])
+        sourceLinks: (function () {
+          if (Array.isArray(msg.sourceLinks) && msg.sourceLinks.length) {
+            return msg.sourceLinks.filter(function (x) { return x && x.url && String(x.url).trim(); }).map(function (x) {
+              var u = String(x.url).trim();
+              if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+              return { label: (x.label && String(x.label).trim()) || '', url: u };
+            });
+          }
+          var urls = Array.isArray(msg.sourceUrls) ? msg.sourceUrls.filter(function (u) { return u && String(u).trim(); }) : (msg.sourceUrl ? [String(msg.sourceUrl).trim()] : []);
+          return urls.map(function (u) { var v = String(u).trim(); if (!/^https?:\/\//i.test(v)) v = 'https://' + v; return { label: '', url: v }; });
+        }())
       };
       entries.unshift(newEntry);
 

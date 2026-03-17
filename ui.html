@@ -58,8 +58,15 @@
     align-items: center;
     margin-bottom: 8px;
   }
-  .url-row input {
+  .url-row .link-label {
+    flex: 0 0 140px;
+    margin-bottom: 0;
+  }
+  .url-row .link-url {
     flex: 1;
+    margin-bottom: 0;
+  }
+  .url-row input {
     margin-bottom: 0;
   }
   .btn-remove-url {
@@ -441,15 +448,16 @@
     <div id="change" class="comment-field" contenteditable="true" aria-required="true"></div>
   </div>
 
-  <label>Figma URLs</label>
-  <p class="subtitle" style="margin-top:0;margin-bottom:8px">Link frames, components or pages. Add multiple if needed.</p>
+  <label>Links</label>
+  <p class="subtitle" style="margin-top:0;margin-bottom:8px">Add links to Figma frames, external resources, etc. Label is optional.</p>
   <div class="url-list" id="urlListFile">
     <div class="url-row">
-      <input type="text" data-url-input placeholder="Paste link to frame, component or page" autocomplete="url" />
+      <input type="text" class="link-label" data-label-input placeholder="Label" autocomplete="off" />
+      <input type="text" class="link-url" data-url-input placeholder="https://..." autocomplete="url" />
       <button type="button" class="btn-remove-url hidden" title="Remove" aria-label="Remove URL">×</button>
     </div>
   </div>
-  <button type="button" class="btn-add-url" id="addUrlFile">+ Add URL</button>
+  <button type="button" class="btn-add-url" id="addUrlFile">+ Add link</button>
   </div>
   <div class="buttons">
     <button id="add">Make File Commit</button>
@@ -497,15 +505,16 @@
     <div id="changeUx" class="comment-field" contenteditable="true" aria-required="true"></div>
   </div>
 
-  <label>Figma URLs</label>
-  <p class="subtitle" style="margin-top:0;margin-bottom:8px">Link frames, components or pages. Add multiple if needed.</p>
+  <label>Links</label>
+  <p class="subtitle" style="margin-top:0;margin-bottom:8px">Add links to Figma frames, external resources, etc. Label is optional.</p>
   <div class="url-list" id="urlListUx">
     <div class="url-row">
-      <input type="text" data-url-input placeholder="Paste link to frame, component or page" autocomplete="url" />
+      <input type="text" class="link-label" data-label-input placeholder="Label" autocomplete="off" />
+      <input type="text" class="link-url" data-url-input placeholder="https://..." autocomplete="url" />
       <button type="button" class="btn-remove-url hidden" title="Remove" aria-label="Remove URL">×</button>
     </div>
   </div>
-  <button type="button" class="btn-add-url" id="addUrlUx">+ Add URL</button>
+  <button type="button" class="btn-add-url" id="addUrlUx">+ Add link</button>
   </div>
   <div class="buttons">
     <button id="addUx">Make UX/UI Commit</button>
@@ -592,53 +601,74 @@
 
   function normalizeUrl(val) {
     if (!val) return '';
-    if (!/figma\.com/i.test(val)) return '';
-    val = val.trim();
+    val = String(val).trim();
+    if (!val) return '';
     if (!/^https?:\/\//i.test(val)) val = 'https://' + val;
+    if (val.length < 12) return '';
     return val;
   }
-  function getSourceUrls(container) {
-    var inputs = container ? container.querySelectorAll('input[data-url-input]') : [];
-    var urls = [];
-    for (var i = 0; i < inputs.length; i++) {
-      var u = normalizeUrl(inputs[i].value);
-      if (u) urls.push(u);
+  function isValidUrl(val) {
+    val = (val || '').trim();
+    if (!val) return true;
+    var normalized = /^https?:\/\//i.test(val) ? val : 'https://' + val;
+    return normalized.length >= 12;
+  }
+  function getSourceLinks(container) {
+    var rows = container ? container.querySelectorAll('.url-row') : [];
+    var links = [];
+    for (var i = 0; i < rows.length; i++) {
+      var urlInp = rows[i].querySelector('input[data-url-input]');
+      var labelInp = rows[i].querySelector('input[data-label-input]');
+      var url = urlInp ? normalizeUrl(urlInp.value) : '';
+      if (!url) continue;
+      var label = (labelInp && labelInp.value) ? String(labelInp.value).trim() : '';
+      links.push({ label: label, url: url });
     }
-    return urls;
+    return links;
   }
   function hasEmptyUrlRows(container) {
-    var inputs = container ? container.querySelectorAll('input[data-url-input]') : [];
-    if (inputs.length < 2) return false;
-    for (var i = 0; i < inputs.length; i++) {
-      if (!(inputs[i].value || '').trim()) return true;
+    var rows = container ? container.querySelectorAll('.url-row') : [];
+    if (rows.length < 2) return false;
+    for (var i = 0; i < rows.length; i++) {
+      var urlInp = rows[i].querySelector('input[data-url-input]');
+      var labelInp = rows[i].querySelector('input[data-label-input]');
+      var urlEmpty = !(urlInp && (urlInp.value || '').trim());
+      var labelEmpty = !(labelInp && (labelInp.value || '').trim());
+      if (urlEmpty && labelEmpty) return true;
     }
     return false;
   }
   function markEmptyUrlInputs(container) {
-    var inputs = container ? container.querySelectorAll('input[data-url-input]') : [];
-    for (var i = 0; i < inputs.length; i++) {
-      var isEmpty = !(inputs[i].value || '').trim();
-      inputs[i].classList.toggle('field-error', isEmpty);
+    var rows = container ? container.querySelectorAll('.url-row') : [];
+    if (rows.length < 2) return;
+    for (var i = 0; i < rows.length; i++) {
+      var urlInp = rows[i].querySelector('input[data-url-input]');
+      var labelInp = rows[i].querySelector('input[data-label-input]');
+      var urlEmpty = !(urlInp && (urlInp.value || '').trim());
+      var labelEmpty = !(labelInp && (labelInp.value || '').trim());
+      var isEmpty = urlEmpty && labelEmpty;
+      if (urlInp) urlInp.classList.toggle('field-error', isEmpty);
     }
   }
   function hasInvalidUrlInputs(container) {
-    var inputs = container ? container.querySelectorAll('input[data-url-input]') : [];
-    for (var i = 0; i < inputs.length; i++) {
-      var val = (inputs[i].value || '').trim();
-      if (val && !/figma\.com/i.test(val)) return true;
+    var rows = container ? container.querySelectorAll('.url-row') : [];
+    for (var i = 0; i < rows.length; i++) {
+      var urlInp = rows[i].querySelector('input[data-url-input]');
+      var val = urlInp ? (urlInp.value || '').trim() : '';
+      if (val && !isValidUrl(val)) return true;
     }
     return false;
   }
   function markInvalidUrlInputs(container) {
-    var inputs = container ? container.querySelectorAll('input[data-url-input]') : [];
-    for (var i = 0; i < inputs.length; i++) {
-      var val = (inputs[i].value || '').trim();
-      var isInvalid = val && !/figma\.com/i.test(val);
-      if (isInvalid) inputs[i].classList.add('field-error');
+    var rows = container ? container.querySelectorAll('.url-row') : [];
+    for (var i = 0; i < rows.length; i++) {
+      var urlInp = rows[i].querySelector('input[data-url-input]');
+      var val = urlInp ? (urlInp.value || '').trim() : '';
+      if (val && !isValidUrl(val)) urlInp.classList.add('field-error');
     }
   }
   function clearUrlInputErrors(container) {
-    var inputs = container ? container.querySelectorAll('input[data-url-input]') : [];
+    var inputs = container ? container.querySelectorAll('.url-row input') : [];
     for (var i = 0; i < inputs.length; i++) inputs[i].classList.remove('field-error');
   }
   var MAX_URLS = 7;
@@ -650,10 +680,11 @@
     var rows = container ? container.querySelectorAll('.url-row') : [];
     var total = rows.length;
     for (var i = 0; i < rows.length; i++) {
-      var inp = rows[i].querySelector('input[data-url-input]');
+      var urlInp = rows[i].querySelector('input[data-url-input]');
+      var labelInp = rows[i].querySelector('input[data-label-input]');
       var btn = rows[i].querySelector('.btn-remove-url');
-      if (!inp || !btn) continue;
-      var hasContent = (inp.value || '').trim().length > 0;
+      if (!btn) continue;
+      var hasContent = ((urlInp && (urlInp.value || '').trim()) || (labelInp && (labelInp.value || '').trim()));
       var showRemove = total > 1 || hasContent;
       btn.classList.toggle('hidden', !showRemove);
     }
@@ -661,12 +692,14 @@
   function createUrlRow() {
     var row = document.createElement('div');
     row.className = 'url-row';
-    row.innerHTML = '<input type="text" data-url-input placeholder="Paste link to frame, component or page" autocomplete="url" /><button type="button" class="btn-remove-url hidden" title="Remove" aria-label="Remove URL">×</button>';
-    var inp = row.querySelector('input[data-url-input]');
+    row.innerHTML = '<input type="text" class="link-label" data-label-input placeholder="Label" autocomplete="off" /><input type="text" class="link-url" data-url-input placeholder="https://..." autocomplete="url" /><button type="button" class="btn-remove-url hidden" title="Remove" aria-label="Remove URL">×</button>';
+    var urlInp = row.querySelector('input[data-url-input]');
+    var labelInp = row.querySelector('input[data-label-input]');
     var btn = row.querySelector('.btn-remove-url');
     function onChange() { updateUrlRemoveButtons(row.parentNode); }
-    inp.addEventListener('input', function () { onChange(); inp.classList.remove('field-error'); });
-    inp.addEventListener('paste', function () { setTimeout(function () { onChange(); inp.classList.remove('field-error'); }, 0); });
+    function clearErr() { urlInp.classList.remove('field-error'); if (labelInp) labelInp.classList.remove('field-error'); }
+    if (urlInp) { urlInp.addEventListener('input', function () { onChange(); clearErr(); }); urlInp.addEventListener('paste', function () { setTimeout(function () { onChange(); clearErr(); }, 0); }); }
+    if (labelInp) { labelInp.addEventListener('input', onChange); }
     btn.onclick = function () {
       var c = row.parentNode;
       if (!c) return;
@@ -674,7 +707,8 @@
       if (c.querySelectorAll('.url-row').length > 1) {
         row.remove();
       } else {
-        inp.value = '';
+        if (urlInp) urlInp.value = '';
+        if (labelInp) labelInp.value = '';
         btn.classList.add('hidden');
       }
       updateUrlRemoveButtons(c);
@@ -729,7 +763,7 @@
   var urlListUx = document.getElementById('urlListUx');
   document.getElementById('addUrlFile').onclick = function () {
     if (urlListFile.querySelectorAll('.url-row').length >= MAX_URLS) {
-      alert('Maximum ' + MAX_URLS + ' URLs allowed.');
+      alert('Maximum ' + MAX_URLS + ' links allowed.');
       return;
     }
     urlListFile.appendChild(createUrlRow());
@@ -738,7 +772,7 @@
   };
   document.getElementById('addUrlUx').onclick = function () {
     if (urlListUx.querySelectorAll('.url-row').length >= MAX_URLS) {
-      alert('Maximum ' + MAX_URLS + ' URLs allowed.');
+      alert('Maximum ' + MAX_URLS + ' links allowed.');
       return;
     }
     urlListUx.appendChild(createUrlRow());
@@ -867,17 +901,17 @@
     }
     if (hasEmptyUrlRows(urlListFile)) {
       markEmptyUrlInputs(urlListFile);
-      messages.push('You have added URL fields that are empty. Fill in all URLs or remove the empty ones before committing.');
+      messages.push('You have added link rows that are empty. Fill in all links or remove the empty ones before committing.');
     }
     if (hasInvalidUrlInputs(urlListFile)) {
       markInvalidUrlInputs(urlListFile);
-      messages.push('URL fields must contain only Figma links (e.g. figma.com/design/...). Remove or correct any invalid text.');
+      messages.push('URL fields must contain valid links (e.g. https://figma.com/... or https://...). Remove or correct any invalid text.');
     }
     if (messages.length > 0) {
       alert(messages.join('\n\n'));
       return;
     }
-    var sourceUrls = getSourceUrls(urlListFile);
+    var sourceLinks = getSourceLinks(urlListFile);
     parent.postMessage({
       pluginMessage: {
         type: 'add-entry',
@@ -885,7 +919,7 @@
         versionType: selectedVersion,
         commentType: inferCommentType(text),
         text: text,
-        sourceUrls: sourceUrls,
+        sourceLinks: sourceLinks,
         saveToVersionHistory: true
       }
     }, '*');
@@ -915,17 +949,17 @@
     }
     if (hasEmptyUrlRows(urlListUx)) {
       markEmptyUrlInputs(urlListUx);
-      messages.push('You have added URL fields that are empty. Fill in all URLs or remove the empty ones before committing.');
+      messages.push('You have added link rows that are empty. Fill in all links or remove the empty ones before committing.');
     }
     if (hasInvalidUrlInputs(urlListUx)) {
       markInvalidUrlInputs(urlListUx);
-      messages.push('URL fields must contain only Figma links (e.g. figma.com/design/...). Remove or correct any invalid text.');
+      messages.push('URL fields must contain valid links (e.g. https://figma.com/... or https://...). Remove or correct any invalid text.');
     }
     if (messages.length > 0) {
       alert(messages.join('\n\n'));
       return;
     }
-    var sourceUrls = getSourceUrls(urlListUx);
+    var sourceLinks = getSourceLinks(urlListUx);
     parent.postMessage({
       pluginMessage: {
         type: 'add-entry',
@@ -935,7 +969,7 @@
         versionType: selectedUxVersion,
         commentType: inferCommentType(text),
         text: text,
-        sourceUrls: sourceUrls,
+        sourceLinks: sourceLinks,
         saveToVersionHistory: false
       }
     }, '*');
