@@ -69,6 +69,10 @@
   .url-row input {
     margin-bottom: 0;
   }
+  .url-row input::placeholder,
+  .url-row input::-webkit-input-placeholder {
+    color: #9AA4B2;
+  }
   .btn-remove-url {
     flex-shrink: 0;
     width: 32px;
@@ -426,13 +430,13 @@
 
   <label>Version type</label>
   <div class="btn-group" id="versionType">
-    <button type="button" data-version="beta">Beta<br><span class="version-num">beta 01</span></button>
+    <button type="button" data-version="beta" class="selected">Beta<br><span class="version-num">beta 01</span></button>
     <button type="button" data-version="patch">Patch<br><span class="version-num">v0.1.1</span></button>
     <button type="button" data-version="minor">Minor<br><span class="version-num">v0.2.0</span></button>
     <button type="button" data-version="major">Major<br><span class="version-num">v1.0.0</span></button>
   </div>
 
-  <label>Comment type</label>
+  <label>Comment type <span style="color:#EA0B16" aria-hidden="true">*</span></label>
   <p class="subtitle" style="margin-top:0;margin-bottom:8px">Click on one or more to add them to the text.</p>
   <div class="btn-group" id="commentType">
     <button type="button" data-type="added">&#128640; Added</button>
@@ -483,13 +487,13 @@
 
   <label>Version type</label>
   <div class="btn-group" id="versionTypeUx">
-    <button type="button" data-version="beta">Beta<br><span class="version-num">beta 01</span></button>
-    <button type="button" data-version="patch" class="selected">Patch</button>
+    <button type="button" data-version="beta" class="selected">Beta<br><span class="version-num">beta 01</span></button>
+    <button type="button" data-version="patch">Patch</button>
     <button type="button" data-version="minor">Minor</button>
     <button type="button" data-version="major">Major</button>
   </div>
 
-  <label>Comment type</label>
+  <label>Comment type <span style="color:#EA0B16" aria-hidden="true">*</span></label>
   <p class="subtitle" style="margin-top:0;margin-bottom:8px">Click on one or more to add them to the text.</p>
   <div class="btn-group" id="commentTypeUx">
     <button type="button" data-type="added">&#128640; Added</button>
@@ -551,7 +555,7 @@
   var commentTypeEl = document.getElementById('commentType');
   var commentField = document.getElementById('change');
 
-  var selectedVersion = 'patch';
+  var selectedVersion = 'beta';
 
   function insertTypeLine(field, line) {
     field.focus();
@@ -814,7 +818,7 @@
   var commentFieldUx = document.getElementById('changeUx');
 
   var selectedUxUi = 'ui';
-  var selectedUxVersion = 'patch';
+  var selectedUxVersion = 'beta';
 
   versionTypeUxUiEl.onclick = function (e) {
     var btn = e.target.closest('button[data-version-ux]');
